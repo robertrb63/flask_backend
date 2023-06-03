@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 app=FastAPI()
@@ -15,7 +15,6 @@ users_list = [User(id=1, name="Roberto", surname="Restrepo", url="http://rr",age
               User(id=3, name="Raul", surname="Angulo", url="http://rr",age=34),
               User(id=5, name="Cesar", surname="Martinez", url="http://rr",age=44)]    
        
-
 @app.get("/")
 async def root():
     return {"url":"http://robert"}
@@ -23,7 +22,6 @@ async def root():
 @app.get("/users")
 async def users():
     return users_list
-
 
 @app.get("/users/{id}")
 async def users(id:int):
@@ -33,13 +31,12 @@ async def users(id:int):
     except:
         return{"error":"No se encuentra el Usuario"}
 
-
-@app.post("/user/")  
+@app.post("/user/", status_code=201)  
 async def user(user:User):
     if type(search_user(user.id))==User:
-        return {"error":"El Ususario ya existe"}
-    else:
-        users_list.append(user)  
+        raise HTTPException(status_code=204, detail="El Ususario ya existe")   
+    users_list.append(user)
+    return user  
 
 @app.put("/user/")
 async def user(user:User):
@@ -49,8 +46,8 @@ async def user(user:User):
         if saved_user.id == user.id:
             users_list[index] = user
             found = True
-        if not found:
-            return {"error":"No se ha actualizado el Usuario"}
+    if not found:
+        return {"error":"No se ha actualizado el Usuario"}
             
 @app.delete("/user/{id}")
 async def user(id:int):
@@ -61,10 +58,9 @@ async def user(id:int):
         if saved_user.id == id:
             del users_list[index]
             found = True
-        if not found:
-            return {"error":"El Usuario no existe"}
+    if not found:
+        return {"error":"El Usuario no existe"}
     
-
 def search_user(id:int):
     users=filter(lambda user:user.id == id, users_list)
     try:
@@ -81,5 +77,4 @@ async def users(name:str):
         return{"error":"No se encuentra el Usuario con este nombre"}    
 
 
-    
-    
+ 
